@@ -142,6 +142,9 @@ display."
 ;; switching between `deadgrep-mode' and `deadgrep-edit-mode'.
 (put 'deadgrep--search-term 'permanent-local t)
 
+(defvar-local deadgrep--search-skip-ignored t)
+(put 'deadgrep--search-skip-ignored 'permanent-local t)
+
 (defvar-local deadgrep--search-type 'string)
 (put 'deadgrep--search-type 'permanent-local t)
 (defvar-local deadgrep--search-case 'smart)
@@ -485,6 +488,15 @@ with a text face property `deadgrep-match-face'."
        (list type (s-split (rx ", ") globs)))
      types-and-globs)))
 
+(define-button-type 'deadgrep-skip-ignored
+  'action #'deadgrep--skip-ignored
+  'skip-ignored t
+  'help-echo "Change skip ignored strategy")
+
+(defun deadgrep--skip-ignored (button)
+  (setq deadgrep--search-skip-ignored (button-get button 'skip-ignored))
+  (deadgrep-restart))
+
 (define-button-type 'deadgrep-file-type
   'action #'deadgrep--file-type
   'case nil
@@ -729,6 +741,9 @@ to obtain ripgrep results."
       (push (format "--before-context=%s" (car context)) args)
       (push (format "--after-context=%s" (cdr context)) args))
 
+	(if (eq deadgrep--search-skip-ignored nil)
+        (push "--no-ignore" args))
+
     (push "--" args)
     (push search-term args)
     (push "." args)
@@ -832,6 +847,20 @@ search settings."
             (if (eq (car-safe deadgrep--file-type) 'glob)
                 (format ":%s" (cdr deadgrep--file-type))
               "")
+
+			"\n"
+            (propertize "Skip ignored: "
+                        'face 'deadgrep-meta-face)
+            (if (eq deadgrep--search-skip-ignored t)
+                "yes"
+              (deadgrep--button "yes" 'deadgrep-skip-ignored
+                                'skip-ignored t))
+            " "
+            (if (eq deadgrep--search-skip-ignored nil)
+                "no"
+              (deadgrep--button "no" 'deadgrep-skip-ignored
+                                'skip-ignored nil))
+
             "\n\n")
     (put-text-property
      start-pos (point)
