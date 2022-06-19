@@ -1264,11 +1264,11 @@ If POS is nil, use the beginning position of the current line."
                                 line-number column-offset)]
           ;; Put point on the position of the match, widening the
           ;; buffer if necessary.
-          (when (or (< destination-pos (point-min))
-                    (> destination-pos (point-max)))
-            (widen))
+		  (widen)
           (goto-char destination-pos)
-
+		  (goto-char destination-pos)
+		  (when (derived-mode-p 'org-mode)
+			(org-fold-show-context))
           ;; Temporarily highlight the parts of the line that matched
           ;; the search term.
           (-each match-positions
