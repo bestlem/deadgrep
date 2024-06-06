@@ -144,8 +144,8 @@ display."
 ;; switching between `deadgrep-mode' and `deadgrep-edit-mode'.
 (put 'deadgrep--search-term 'permanent-local t)
 
-(defvar-local deadgrep--search-skip-ignored t)
-(put 'deadgrep--search-skip-ignored 'permanent-local t)
+(defvar-local deadgrep--search-skip-hidden t)
+(put 'deadgrep--search-skip-hidden 'permanent-local t)
 
 (defvar-local deadgrep--search-type 'string)
 (put 'deadgrep--search-type 'permanent-local t)
@@ -490,13 +490,20 @@ with a text face property `deadgrep-match-face'."
        (list type (s-split (rx ", ") globs)))
      types-and-globs)))
 
-(define-button-type 'deadgrep-skip-ignored
-  'action #'deadgrep--skip-ignored
-  'skip-ignored t
+(define-button-type 'deadgrep-skip-git-ignored
+  'action #'deadgrep--skip-git-ignored
+  'skip-git-ignored t
   'help-echo "Change skip ignored strategy")
 
-(defun deadgrep--skip-ignored (button)
-  (setq deadgrep--search-skip-ignored (button-get button 'skip-ignored))
+
+
+(define-button-type 'deadgrep-skip-hidden
+  'action #'deadgrep--skip-hidden
+  'skip-hidden t
+  'help-echo "Change skip ignored strategy")
+
+(defun deadgrep--skip-hidden (button)
+  (setq deadgrep--search-skip-hidden (button-get button 'skip-hidden))
   (deadgrep-restart))
 
 (define-button-type 'deadgrep-file-type
@@ -742,9 +749,10 @@ to obtain ripgrep results."
     (when context
       (push (format "--before-context=%s" (car context)) args)
       (push (format "--after-context=%s" (cdr context)) args))
+	
 
-	(if (eq deadgrep--search-skip-ignored nil)
-        (push "--no-ignore" args))
+	(when (eq deadgrep--search-skip-hidden nil)
+      (push "--hidden" args))
 
     (push "--" args)
     (push search-term args)
@@ -850,18 +858,20 @@ search settings."
                 (format ":%s" (cdr deadgrep--file-type))
               "")
 
+			
+
 			"\n"
-            (propertize "Skip ignored: "
+            (propertize "Skip hidden: "
                         'face 'deadgrep-meta-face)
-            (if (eq deadgrep--search-skip-ignored t)
+            (if (eq deadgrep--search-skip-hidden t)
                 "yes"
-              (deadgrep--button "yes" 'deadgrep-skip-ignored
-                                'skip-ignored t))
+              (deadgrep--button "yes" 'deadgrep-skip-hidden
+                                'skip-hidden t))
             " "
-            (if (eq deadgrep--search-skip-ignored nil)
+            (if (eq deadgrep--search-skip-hidden nil)
                 "no"
-              (deadgrep--button "no" 'deadgrep-skip-ignored
-                                'skip-ignored nil))
+              (deadgrep--button "no" 'deadgrep-skip-hidden
+                                'skip-hidden nil))
 
             "\n\n")
     (put-text-property
