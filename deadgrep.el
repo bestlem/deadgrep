@@ -37,6 +37,8 @@
 (require 'spinner)
 (require 'project)
 
+(declare-function org-fold-show-context "org-fold")
+
 (defgroup deadgrep nil
   "A powerful text search UI using ripgrep."
   :group 'tools
